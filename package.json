@@ -1,0 +1,8 @@
+{
+  "name": "unified-calendar",
+  "version": "0.1.0",
+  "description": "One calendar that merges and auto-updates your private, college and work calendars",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "test": "node test.js" },
+  "engines": { "node": ">=18" }
+}
