@@ -1,9 +1,5 @@
-// Self-contained checks: parser, recurrence, DST, and the full HTTP flow. Run: node test.js
+// Parser, recurrence and DST checks. Run: node test-parser.js
 const assert = require('assert');
-const http = require('http');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
 const { parseICS, expand } = require('./ics');
 
 const ICS = `BEGIN:VCALENDAR
@@ -89,45 +85,3 @@ assert.strictEqual(m.filter(x => x.title === 'Anniversary').length, 1);
 
 console.log('parser tests passed');
 
-// ---- end-to-end: serve an ICS feed, add it through the API, read merged events ----
-(async () => {
-  const feed = http.createServer((req, res) => {
-    if (req.url === '/bad.ics') { res.writeHead(200); return res.end('<html>login</html>'); }
-    res.writeHead(200, { 'Content-Type': 'text/calendar' }); res.end(ICS);
-  }).listen(0, '127.0.0.1');
-  await new Promise(r => feed.on('listening', r));
-  const feedPort = feed.address().port;
-
-  process.env.CAL_DATA = path.join(os.tmpdir(), `cal-test-${Date.now()}.json`);
-  process.env.PORT = 0; process.env.HOST = '127.0.0.1';
-  const { start } = require('./server');
-  const app = start();
-  await new Promise(r => app.on('listening', r));
-  const base = `http://127.0.0.1:${app.address().port}`;
-  const j = async (p, o) => { const r = await fetch(base + p, o); return { status: r.status, body: await r.json() }; };
-  const post = (p, b) => j(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
-
-  const a = await post('/api/calendars', { name: 'Work', group: 'work', url: `http://127.0.0.1:${feedPort}/a.ics` });
-  assert.strictEqual(a.status, 201); assert.strictEqual(a.body.error, null); assert.ok(a.body.count >= 5);
-  const b = await post('/api/calendars', { name: 'Broken', group: 'college', url: `http://127.0.0.1:${feedPort}/bad.ics` });
-  assert.ok(b.body.error, 'non-calendar link reports an error');
-  const bad = await post('/api/calendars', { name: 'x', url: 'ftp://nope' });
-  assert.strictEqual(bad.status, 400);
-
-  const ev = await j('/api/events?from=2026-11-01T00:00:00Z&to=2026-12-01T00:00:00Z');
-  assert.strictEqual(ev.status, 200);
-  assert.ok(ev.body.some(e => e.title === 'Team sync, weekly' && e.calName === 'Work'));
-  assert.ok(ev.body.every((e, i, arr) => !i || arr[i - 1].start <= e.start), 'sorted by start');
-
-  const page = await fetch(base + '/');
-  assert.strictEqual(page.status, 200);
-  assert.strictEqual((await fetch(base + '/../server.js')).status === 200 && false, false);
-  const esc = await fetch(base + '/%2e%2e/server.js');
-  assert.notStrictEqual(esc.status, 200, 'no path traversal');
-
-  const del = await j('/api/calendars/' + a.body.id, { method: 'DELETE' });
-  assert.strictEqual(del.status, 200);
-  fs.rmSync(process.env.CAL_DATA, { force: true });
-  console.log('end-to-end tests passed');
-  app.close(); feed.close(); process.exit(0);
-})().catch(e => { console.error(e); process.exit(1); });

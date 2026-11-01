@@ -3,72 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2f5bea">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="stylesheet" href="/style.css">
 <title>Unified Calendar</title>
-<style>
-  :root {
-    --bg: #fafaf8; --panel: #ffffff; --text: #1f2328; --muted: #6b7280; --line: #e5e7eb; --accent: #2f5bea; --today: #eef3ff;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #14161a; --panel: #1c1f24; --text: #e8eaed; --muted: #9aa0a6; --line: #2d3138; --accent: #7aa2ff; --today: #202a44; }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; font: 15px/1.4 system-ui, -apple-system, Segoe UI, sans-serif; background: var(--bg); color: var(--text); }
-  header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 5; }
-  header h1 { font-size: 17px; margin: 0 8px 0 0; }
-  button, select, input { font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
-  button { cursor: pointer; }
-  button:hover { border-color: var(--accent); }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .spacer { flex: 1; }
-  .seg button { border-radius: 0; margin-left: -1px; }
-  .seg button:first-child { border-radius: 8px 0 0 8px; margin: 0; }
-  .seg button:last-child { border-radius: 0 8px 8px 0; }
-  .seg button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
-  main { display: grid; grid-template-columns: 240px 1fr; gap: 16px; padding: 16px; max-width: 1200px; margin: 0 auto; }
-  @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
-  aside { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; align-self: start; }
-  aside h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 0 6px; }
-  aside h2:first-child { margin-top: 0; }
-  .cal { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-  .cal input { margin: 0; accent-color: var(--c); }
-  .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
-  .cal .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .cal .x { border: 0; background: none; color: var(--muted); padding: 0 4px; }
-  .err { color: #d93025; font-size: 12px; }
-  .ok { color: var(--muted); font-size: 12px; }
-  .view { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-  .title { font-weight: 600; font-size: 17px; min-width: 150px; }
-  /* month grid */
-  .grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-  .dow { padding: 6px; font-size: 12px; color: var(--muted); text-align: center; border-bottom: 1px solid var(--line); }
-  .day { min-height: 96px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 4px; overflow: hidden; }
-  .day:nth-child(7n) { border-right: 0; }
-  .day.other { opacity: .45; }
-  .day.today { background: var(--today); }
-  .day .n { font-size: 12px; color: var(--muted); }
-  .day.today .n { color: var(--accent); font-weight: 700; }
-  .chip { display: block; font-size: 12px; padding: 1px 5px; margin-top: 2px; border-radius: 4px; color: #fff; background: var(--c); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
-  .more { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  @media (max-width: 760px) { .day { min-height: 64px; } .chip { font-size: 10px; padding: 0 3px; } }
-  /* agenda */
-  .agenda h3 { margin: 0; padding: 10px 14px; font-size: 13px; background: var(--bg); border-bottom: 1px solid var(--line); border-top: 1px solid var(--line); }
-  .agenda h3.today { color: var(--accent); }
-  .row { display: flex; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); cursor: pointer; }
-  .row .t { width: 92px; flex: none; color: var(--muted); font-size: 13px; }
-  .row .bar { width: 4px; border-radius: 2px; background: var(--c); flex: none; }
-  .row .meta { color: var(--muted); font-size: 13px; }
-  .empty { padding: 28px; text-align: center; color: var(--muted); }
-  /* dialogs */
-  dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--text); max-width: 440px; width: calc(100% - 32px); }
-  dialog::backdrop { background: rgba(0,0,0,.4); }
-  dialog label { display: block; margin: 10px 0 4px; font-size: 13px; color: var(--muted); }
-  dialog input, dialog select { width: 100%; }
-  .help { font-size: 12px; color: var(--muted); margin-top: 8px; }
-  .help summary { cursor: pointer; }
-  .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
-</style>
 </head>
 <body>
+
+<div id="loginView" class="login hidden">
+  <h1>Unified Calendar</h1>
+  <p>Your private, college and work calendars in one place.</p>
+  <div id="ssoButtons"></div>
+  <form id="devForm" class="hidden"><input id="devEmail" type="email" placeholder="email (local test login)" style="width:100%;margin-top:8px" required><button class="sso" style="margin-top:8px">Continue</button></form>
+  <div class="msg" id="loginMsg"></div>
+</div>
+
+<div id="appView" class="hidden">
 <header>
   <h1>Unified Calendar</h1>
   <button id="prev" aria-label="Previous">‹</button>
@@ -77,189 +29,46 @@
   <span class="title" id="title"></span>
   <span class="spacer"></span>
   <span class="seg"><button id="vMonth" class="on">Month</button><button id="vAgenda">Agenda</button></span>
-  <button id="refresh" title="Fetch the latest from all calendars">↻ Refresh</button>
+  <button id="refresh" title="Fetch the latest from all calendars">↻</button>
+  <span class="menu"><button id="acctBtn" aria-label="Account">👤</button><div class="pop hidden" id="acctPop"></div></span>
 </header>
 
 <main>
   <aside>
     <div id="cals"></div>
-    <div class="actions" style="justify-content:flex-start"><button class="primary" id="add">+ Add calendar</button></div>
+    <div class="actions" style="justify-content:flex-start"><button class="primary" id="add">+ Add calendar link</button></div>
   </aside>
   <section class="view" id="view"></section>
 </main>
+</div>
 
 <dialog id="addDlg">
   <form method="dialog" id="addForm">
-    <h3 style="margin:0 0 4px">Add a calendar</h3>
-    <label>Name</label><input id="fName" placeholder="e.g. Work" required>
+    <h3 style="margin:0 0 4px">Add a calendar link</h3>
+    <label>Name</label><input id="fName" placeholder="e.g. College timetable" required>
     <label>Type</label>
-    <select id="fGroup"><option value="private">Private</option><option value="college">College</option><option value="work">Work</option></select>
+    <select id="fGroup"><option value="private">Private</option><option value="college" selected>College</option><option value="work">Work</option></select>
     <label>Private calendar link (.ics)</label><input id="fUrl" placeholder="https://… or webcal://…" required>
     <details class="help"><summary>Where do I find this link?</summary>
-      <p><b>Google:</b> Calendar settings → your calendar → “Secret address in iCal format”.</p>
-      <p><b>Outlook:</b> Settings → Calendar → Shared calendars → Publish a calendar → copy the ICS link. (If your work account blocks publishing, ask IT or use a forwarding rule.)</p>
-      <p><b>College / other:</b> look for “Subscribe”, “Export” or “iCal / webcal link” in your timetable or learning platform.</p>
-      <p>Treat the link like a password: anyone who has it can read that calendar.</p>
+      <p>Look for “Subscribe”, “Export” or “iCal / webcal link” in your college timetable or learning platform. Treat the link like a password.</p>
     </details>
     <div class="err" id="fErr"></div>
     <div class="actions"><button type="button" id="fCancel">Cancel</button><button class="primary" id="fSave" value="save">Add</button></div>
   </form>
 </dialog>
 
-<dialog id="evDlg"><div id="evBody"></div><div class="actions"><button onclick="document.getElementById('evDlg').close()">Close</button></div></dialog>
+<dialog id="editDlg">
+  <form method="dialog" id="editForm">
+    <h3 style="margin:0 0 4px">Edit calendar</h3>
+    <label>Name</label><input id="eName" required>
+    <label>Type</label><select id="eGroup"><option value="private">Private</option><option value="college">College</option><option value="work">Work</option></select>
+    <label>Colour</label><input id="eColor" type="color" style="height:38px;padding:2px">
+    <div class="actions"><button type="button" id="eCancel">Cancel</button><button class="primary" value="save">Save</button></div>
+  </form>
+</dialog>
 
-<script>
-const $ = id => document.getElementById(id);
-const state = { view: 'month', cursor: startOfMonth(new Date()), cals: [], events: [], hidden: new Set(JSON.parse(localStorage.getItem('hidden') || '[]')) };
-const GROUP_LABEL = { private: 'Private', college: 'College', work: 'Work' };
+<dialog id="evDlg"><div id="evBody"></div><div class="actions"><button id="evClose">Close</button></div></dialog>
 
-function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
-function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
-function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
-function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-const fmtTime = ms => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-// All-day events are stored as UTC midnight; show them on that calendar date regardless of timezone.
-function localStart(e) { if (!e.allDay) return new Date(e.start); const d = new Date(e.start); return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); }
-function localEnd(e) { if (!e.allDay) return new Date(e.end); const d = new Date(e.end); return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); }
-function occursOn(e, day) {
-  const s = localStart(e), en = localEnd(e), d0 = new Date(day.getFullYear(), day.getMonth(), day.getDate()), d1 = addDays(d0, 1);
-  return s < d1 && (en > d0 || sameDay(s, d0));
-}
-
-function range() {
-  if (state.view === 'month') {
-    const first = startOfMonth(state.cursor);
-    const from = addDays(first, -first.getDay());
-    return [from, addDays(from, 42)];
-  }
-  return [new Date(state.cursor.getFullYear(), state.cursor.getMonth(), 1), new Date(state.cursor.getFullYear(), state.cursor.getMonth() + 1, 1)];
-}
-
-async function api(path, opts) {
-  const r = await fetch(path, opts);
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || r.statusText);
-  return j;
-}
-
-async function load() {
-  const [from, to] = range();
-  // pad by a day so all-day events and timezone edges are never clipped
-  const q = new URLSearchParams({ from: addDays(from, -1).toISOString(), to: addDays(to, 1).toISOString() });
-  [state.cals, state.events] = await Promise.all([api('/api/calendars'), api('/api/events?' + q)]);
-  render();
-}
-
-function visible() { return state.events.filter(e => !state.hidden.has(e.calId)); }
-
-function renderSidebar() {
-  const groups = ['private', 'college', 'work'];
-  let html = '';
-  for (const g of groups) {
-    const list = state.cals.filter(c => c.group === g);
-    if (!list.length) continue;
-    html += `<h2>${GROUP_LABEL[g]}</h2>`;
-    for (const c of list) {
-      const status = c.error ? `<div class="err">⚠ ${esc(c.error)}</div>` : c.updatedAt ? `<div class="ok">${c.count} events · updated ${new Date(c.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>` : '';
-      html += `<div style="margin-bottom:6px"><div class="cal" style="--c:${c.color}">
-        <input type="checkbox" data-id="${c.id}" ${state.hidden.has(c.id) ? '' : 'checked'}>
-        <span class="dot" style="background:${c.color}"></span><span class="name">${esc(c.name)}</span>
-        <button class="x" data-del="${c.id}" title="Remove">✕</button></div>${status}</div>`;
-    }
-  }
-  $('cals').innerHTML = html || '<div class="empty" style="padding:8px">No calendars yet.<br>Add your first one below.</div>';
-}
-
-function renderMonth() {
-  const [from] = range();
-  const ev = visible();
-  let html = '<div class="grid">' + ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => `<div class="dow">${d}</div>`).join('');
-  const today = new Date();
-  for (let i = 0; i < 42; i++) {
-    const day = addDays(from, i);
-    const items = ev.filter(e => occursOn(e, day)).sort((a, b) => (b.allDay - a.allDay) || a.start - b.start);
-    const cls = ['day', day.getMonth() !== state.cursor.getMonth() ? 'other' : '', sameDay(day, today) ? 'today' : ''].join(' ');
-    html += `<div class="${cls}"><div class="n">${day.getDate()}</div>`;
-    for (const e of items.slice(0, 3)) html += `<span class="chip" style="--c:${e.color}" data-ev="${state.events.indexOf(e)}">${e.allDay ? '' : fmtTime(e.start) + ' '}${esc(e.title)}</span>`;
-    if (items.length > 3) html += `<div class="more">+${items.length - 3} more</div>`;
-    html += '</div>';
-  }
-  $('view').innerHTML = html + '</div>';
-}
-
-function renderAgenda() {
-  const [from, to] = range();
-  const ev = visible();
-  const today = new Date();
-  let html = '<div class="agenda">', any = false;
-  for (let d = new Date(from); d < to; d = addDays(d, 1)) {
-    const items = ev.filter(e => occursOn(e, d)).sort((a, b) => (b.allDay - a.allDay) || a.start - b.start);
-    if (!items.length) continue;
-    any = true;
-    html += `<h3 class="${sameDay(d, today) ? 'today' : ''}">${d.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' })}</h3>`;
-    for (const e of items) html += `<div class="row" style="--c:${e.color}" data-ev="${state.events.indexOf(e)}"><span class="bar"></span>
-      <span class="t">${e.allDay ? 'All day' : fmtTime(e.start) + '–' + fmtTime(e.end)}</span>
-      <span><div>${esc(e.title)}</div><div class="meta">${esc(e.calName)}${e.location ? ' · ' + esc(e.location) : ''}</div></span></div>`;
-  }
-  $('view').innerHTML = html + (any ? '' : '<div class="empty">Nothing scheduled this month.</div>') + '</div>';
-}
-
-function render() {
-  $('title').textContent = state.cursor.toLocaleDateString([], { month: 'long', year: 'numeric' });
-  $('vMonth').classList.toggle('on', state.view === 'month');
-  $('vAgenda').classList.toggle('on', state.view === 'agenda');
-  renderSidebar();
-  state.view === 'month' ? renderMonth() : renderAgenda();
-}
-
-function showEvent(e) {
-  const when = e.allDay ? localStart(e).toLocaleDateString([], { dateStyle: 'full' })
-    : new Date(e.start).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) + ' – ' + fmtTime(e.end);
-  $('evBody').innerHTML = `<h3 style="margin:0 0 4px">${esc(e.title)}</h3>
-    <div style="color:var(--muted)"><span class="dot" style="display:inline-block;background:${e.color}"></span> ${esc(e.calName)}</div>
-    <p>${esc(when)}</p>${e.location ? `<p>📍 ${esc(e.location)}</p>` : ''}${e.description ? `<p style="white-space:pre-wrap">${esc(e.description)}</p>` : ''}`;
-  $('evDlg').showModal();
-}
-
-// ---- interactions ----
-function move(n) { state.cursor = new Date(state.cursor.getFullYear(), state.cursor.getMonth() + n, 1); load(); }
-$('prev').onclick = () => move(-1);
-$('next').onclick = () => move(1);
-$('today').onclick = () => { state.cursor = startOfMonth(new Date()); load(); };
-$('vMonth').onclick = () => { state.view = 'month'; load(); };
-$('vAgenda').onclick = () => { state.view = 'agenda'; load(); };
-$('refresh').onclick = async () => { $('refresh').disabled = true; try { await api('/api/refresh', { method: 'POST' }); await load(); } finally { $('refresh').disabled = false; } };
-
-document.addEventListener('click', async ev => {
-  const chip = ev.target.closest('[data-ev]'); if (chip) return showEvent(state.events[+chip.dataset.ev]);
-  const del = ev.target.closest('[data-del]');
-  if (del && confirm('Remove this calendar from Unified Calendar? (Your original calendar is not affected.)')) { await api('/api/calendars/' + del.dataset.del, { method: 'DELETE' }); load(); }
-});
-document.addEventListener('change', ev => {
-  const id = ev.target.dataset && ev.target.dataset.id; if (!id) return;
-  ev.target.checked ? state.hidden.delete(id) : state.hidden.add(id);
-  localStorage.setItem('hidden', JSON.stringify([...state.hidden]));
-  render();
-});
-
-$('add').onclick = () => { $('fErr').textContent = ''; $('addForm').reset(); $('addDlg').showModal(); };
-$('fCancel').onclick = () => $('addDlg').close();
-$('addForm').addEventListener('submit', async ev => {
-  ev.preventDefault();
-  $('fSave').disabled = true; $('fErr').textContent = '';
-  try {
-    const c = await api('/api/calendars', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: $('fName').value, group: $('fGroup').value, url: $('fUrl').value }) });
-    $('addDlg').close();
-    await load();
-    if (c.error) alert('Added, but the first fetch failed: ' + c.error);
-  } catch (e) { $('fErr').textContent = e.message; }
-  $('fSave').disabled = false;
-});
-
-load();
-setInterval(() => { if (!document.hidden) load(); }, 5 * 60 * 1000); // keep the open page fresh
-document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
-</script>
+<script src="/app.js"></script>
 </body>
 </html>

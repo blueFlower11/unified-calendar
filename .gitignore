@@ -1,3 +1,5 @@
 calendars.json
 node_modules/
 .env
+.secret
+*.sqlite*

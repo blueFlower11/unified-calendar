@@ -1,29 +1,58 @@
 # Unified Calendar
 
-One calendar that merges your private, college and work calendars and keeps them up to date automatically.
-No dependencies — just Node 18+.
+One calendar that merges your **private (Google)**, **work (Outlook/Microsoft 365)** and **college (any .ics link)** calendars
+and keeps them up to date automatically. Works as a **web app** and an installable **Android app**; each person signs in with
+Google or Microsoft and sees only their own calendars.
 
-## Run it
+No npm packages. Needs Node 22.5+ (uses the built-in SQLite).
 
-    node server.js
-    # open http://localhost:3000
+## Try it on your own computer (2 minutes)
 
-Click **+ Add calendar**, paste each calendar's private `.ics` link, pick Private / College / Work.
-The server re-fetches every feed every 15 minutes (`REFRESH_MINUTES=5 node server.js` to change it),
-and the open page refreshes itself too. If a feed is temporarily down, the last good copy is kept.
+    DEV_LOGIN=1 node server.js
+    # open http://localhost:3000, type any email, then use "+ Add calendar link" with an .ics link
 
-## Getting the links
+`DEV_LOGIN` is a shortcut login for testing only. Never turn it on for a server other people can reach.
 
-- **Google:** Calendar settings → your calendar → *Secret address in iCal format*
-- **Outlook / Microsoft 365:** Settings → Calendar → Shared calendars → *Publish a calendar* → ICS link
-  (some work accounts block this — ask IT)
-- **College:** look for *Subscribe / Export / iCal / webcal* in the timetable or LMS
+## Put it online (needed for the Android app and for real Google/Microsoft sign-in)
 
-Treat these links like passwords. They are stored in `calendars.json` (git-ignored) and the server
-only listens on `localhost` by default.
+You need a host with HTTPS and a domain (any small VPS, Fly.io, Railway, Render... the `Dockerfile` works for all of them;
+keep `/data` on a persistent volume).
 
-## Notes
+1. Copy `.env.example` to `.env` and set `BASE_URL`, `APP_SECRET` (a long random string) and the keys below.
+2. **Google:** Google Cloud Console → create a project → enable *Google Calendar API* → OAuth consent screen → Credentials →
+   *OAuth client ID* (Web application). Add redirect URI `https://YOUR-DOMAIN/auth/google/callback`.
+   (While the app is in "Testing" mode only people you add as test users can sign in. Publishing for everyone needs Google's review
+   because calendar access is a sensitive scope.)
+3. **Microsoft:** Entra admin center → App registrations → New (accounts in any org directory + personal accounts) →
+   redirect URI `https://YOUR-DOMAIN/auth/microsoft/callback` (type Web) → add delegated permission `Calendars.Read` and a client secret.
+   Some companies require an admin to approve the app before staff can use it.
+4. Start: `node --env-file=.env server.js`
 
-- Read-only: it shows events but doesn't edit your original calendars.
-- Supports recurring events (daily/weekly/monthly/yearly, exceptions, DST-correct), all-day events, time zones.
-- Tests: `node test.js`
+How it works: signing in with Google creates your account and pulls in all your Google calendars. Signed in already? Press 👤 →
+*Connect Microsoft* to add your Outlook calendars to the same account. College timetables: **+ Add calendar link** and paste the .ics link.
+Everything refreshes every 15 minutes (`REFRESH_MINUTES`) and whenever the app is opened.
+
+## Android app
+
+The Android app is this same website in a full-screen Trusted Web Activity (it runs in Chrome, which Google sign-in requires;
+Google blocks sign-in inside ordinary embedded web views). It is installable already as a PWA:
+open your site in Chrome on Android → ⋮ → *Install app*.
+
+For a real APK / Play Store listing, without writing any Android code:
+
+1. Go to **pwabuilder.com**, enter your site's URL, choose *Android* and download the package (it also gives you a signing key).
+2. Put the package name and the SHA-256 fingerprint of that signing key in `.env` as `ANDROID_PACKAGE` and `ANDROID_SHA256`
+   and restart. The server then serves `/.well-known/assetlinks.json`, which makes the app open without a browser address bar.
+3. Install the APK on your phone to test, or upload the `.aab` to the Play Console.
+
+## Privacy and security notes
+
+- Calendars are read-only (`calendar.readonly` / `Calendars.Read`); nothing is ever written to your accounts.
+- Sign-in tokens and private calendar links are encrypted in the database with `APP_SECRET`. Sessions are signed HttpOnly cookies.
+- Users can disconnect accounts, sign out everywhere, or delete their account and all stored data from the 👤 menu.
+- Calendar links pasted by users cannot point at internal network addresses (protects your server from being used to probe itself).
+- Not built yet: rate limiting on sign-in, email notifications, editing events, push notifications.
+
+## Tests
+
+    npm test
