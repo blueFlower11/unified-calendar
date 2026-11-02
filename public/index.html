@@ -45,12 +45,15 @@
 <dialog id="addDlg">
   <form method="dialog" id="addForm">
     <h3 style="margin:0 0 4px">Add a calendar link</h3>
-    <label>Name</label><input id="fName" placeholder="e.g. College timetable" required>
+    <label>Name</label><input id="fName" placeholder="e.g. Work, College timetable" required>
     <label>Type</label>
-    <select id="fGroup"><option value="private">Private</option><option value="college" selected>College</option><option value="work">Work</option></select>
+    <select id="fGroup"><option value="private" selected>Private</option><option value="college">College</option><option value="work">Work</option></select>
     <label>Private calendar link (.ics)</label><input id="fUrl" placeholder="https://… or webcal://…" required>
     <details class="help"><summary>Where do I find this link?</summary>
-      <p>Look for “Subscribe”, “Export” or “iCal / webcal link” in your college timetable or learning platform. Treat the link like a password.</p>
+      <p><b>Google (private):</b> calendar.google.com → Settings → click your calendar → “Secret address in iCal format”.</p>
+      <p><b>Outlook (work):</b> Outlook on the web → Settings → Calendar → Shared calendars → Publish a calendar → choose “Can view all details” → Publish → copy the ICS link. If publishing is missing, your company has turned it off.</p>
+      <p><b>College:</b> look for “Subscribe”, “Export” or “iCal / webcal link” in your timetable or learning platform.</p>
+      <p>Treat the link like a password: anyone who has it can read that calendar. It is stored encrypted on this device only.</p>
     </details>
     <div class="err" id="fErr"></div>
     <div class="actions"><button type="button" id="fCancel">Cancel</button><button class="primary" id="fSave" value="save">Add</button></div>

@@ -6,12 +6,19 @@ Google or Microsoft and sees only their own calendars.
 
 No npm packages. Needs Node 22.5+ (uses the built-in SQLite).
 
-## Try it on your own computer (2 minutes)
+## Personal mode (just for you)
 
-    DEV_LOGIN=1 node server.js
-    # open http://localhost:3000, type any email, then use "+ Add calendar link" with an .ics link
+`SINGLE_USER=1 node server.js`, then open http://localhost:3000.
 
-`DEV_LOGIN` is a shortcut login for testing only. Never turn it on for a server other people can reach.
+- No login and no sign-up. It is one app for one person, and it only answers on the device it runs on.
+- You connect only the calendars you choose: **+ Add calendar link**, paste the calendar's private .ics link, pick Private / College / Work.
+  - **Google:** calendar.google.com → Settings → your calendar → *Secret address in iCal format*
+  - **Outlook (work):** Outlook on the web → Settings → Calendar → Shared calendars → *Publish a calendar* → copy the ICS link (some companies turn this off)
+  - **College:** *Subscribe / Export / iCal* in the timetable or learning platform
+- The links are stored encrypted on your device only, never in the code or on GitHub. Treat them like passwords.
+- Everything is read-only and refreshes every 15 minutes (`REFRESH_MINUTES`).
+
+The multi-user sign-in (Google/Microsoft) described further down is optional and off in personal mode.
 
 ## Run it on your Android phone (Termux)
 
@@ -23,7 +30,7 @@ The app runs on the phone itself, with no hosting and no accounts.
        pkg install -y git && git clone https://github.com/blueFlower11/unified-calendar && bash unified-calendar/scripts/termux.sh
 
 3. When it says "Unified Calendar is starting", open **http://localhost:3000** in Chrome on the same phone.
-   Enter any email on the test login, then **+ Add calendar link** and paste an .ics link.
+   Tap **+ Add calendar link** and paste the link for each calendar you want (see Personal mode above).
 4. Optional: in Chrome tap **⋮ → Install app** to get a home-screen icon.
 
 Later, to get the newest version, open Termux, press the up arrow to bring back the last command (or type
@@ -37,7 +44,7 @@ Your data is kept in `~/.unified-calendar/` and survives updates.
 2. Tap **Code → Codespaces → Create codespace on main**. The first start takes 1-2 minutes.
 3. The app starts by itself. Open the **Ports** tab and tap the link next to port **3000**
    (it is private: only you, signed in to GitHub, can open it).
-4. Enter any email on the test login, then **+ Add calendar link** and paste an .ics link.
+4. Enter any email on the test login (Codespaces uses it instead of personal mode), then **+ Add calendar link** and paste an .ics link.
 
 The Codespace stops after about 30 minutes of inactivity and your free monthly hours apply.
 Your test data stays in the Codespace until you delete it.

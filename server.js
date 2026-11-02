@@ -26,6 +26,9 @@ function create(opts = {}) {
   const REFRESH_MS = (parseInt(env.REFRESH_MINUTES, 10) || 15) * 60 * 1000;
   const ALLOW_PRIVATE_FEEDS = env.ALLOW_PRIVATE_FEEDS === '1';
   const DEV_LOGIN = env.DEV_LOGIN === '1';
+  // Personal mode: one owner, no login screen. Only allowed on this device, so nobody else can reach it.
+  const SINGLE = env.SINGLE_USER === '1';
+  if (SINGLE && !['127.0.0.1', 'localhost', '::1'].includes(HOST)) throw new Error('SINGLE_USER mode has no login, so it only runs on this device (HOST must be 127.0.0.1).');
   const db = open(opts.dbFile || env.DB_FILE || path.join(__dirname, 'data.sqlite'));
   const secret = sec.loadSecret(opts.secretDir || __dirname);
   const cx = sec.makeCrypto(secret);
@@ -150,7 +153,16 @@ function create(opts = {}) {
   });
   const sessionCookie = (uid, sv) => sec.cookie('sid', cx.sign({ u: uid, sv, exp: Date.now() + SESSION_MS }), { maxAge: SESSION_MS / 1000, secure: SECURE });
   const clearCookie = name => sec.cookie(name, '', { maxAge: 0, secure: SECURE });
+  let soleUserId = null;
+  function soleUser() {
+    if (!soleUserId) {
+      const r = db.prepare('SELECT id FROM users ORDER BY id LIMIT 1').get();
+      soleUserId = r ? r.id : Number(q.newUser.run('me@local', 'Me', Date.now()).lastInsertRowid);
+    }
+    return q.userById.get(soleUserId);
+  }
   function currentUser(req) {
+    if (SINGLE) return soleUser();
     const s = cx.verify(sec.parseCookies(req.headers.cookie).sid);
     if (!s) return null;
     const u = q.userById.get(s.u);
@@ -203,6 +215,9 @@ function create(opts = {}) {
   async function handle(req, res) {
     const url = new URL(req.url, BASE_URL);
     const p = url.pathname, m = req.method;
+    // Personal mode: only answer requests addressed to this device (blocks DNS-rebinding tricks from web pages).
+    if (SINGLE && !/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(req.headers.host || '')) return send(res, 403, 'Forbidden', 'text/plain');
+    if (SINGLE && p.startsWith('/auth/')) return send(res, 404, { error: 'Not available in personal mode' });
 
     if (m === 'GET' && (p === '/auth/google/start' || p === '/auth/microsoft/start')) return oauthStart(req, res, p.split('/')[2]);
     if (m === 'GET' && (p === '/auth/google/callback' || p === '/auth/microsoft/callback')) return oauthCallback(req, res, p.split('/')[2], url);
@@ -214,7 +229,7 @@ function create(opts = {}) {
     }
 
     if (p.startsWith('/api/') || p.startsWith('/auth/')) {
-      if (m === 'GET' && p === '/api/config') return send(res, 200, { providers: configured().map(k => ({ id: k, label: providers[k].label })), devLogin: DEV_LOGIN });
+      if (m === 'GET' && p === '/api/config') return send(res, 200, { providers: configured().map(k => ({ id: k, label: providers[k].label })), devLogin: DEV_LOGIN, single: SINGLE });
       // CSRF: state-changing requests must carry a custom header that cross-site pages cannot send
       if (m !== 'GET' && req.headers['x-csrf'] !== '1') return send(res, 403, { error: 'Forbidden' });
 
@@ -232,7 +247,7 @@ function create(opts = {}) {
       if (!user) return send(res, 401, { error: 'Please sign in' });
 
       if (m === 'GET' && p === '/api/me') {
-        return send(res, 200, { name: user.name, email: user.email, identities: q.identsOfUser.all(user.id).map(i => ({ id: i.id, provider: i.provider, email: i.email })), available: configured().map(k => ({ id: k, label: providers[k].label })) });
+        return send(res, 200, { single: SINGLE, name: user.name, email: user.email, identities: q.identsOfUser.all(user.id).map(i => ({ id: i.id, provider: i.provider, email: i.email })), available: configured().map(k => ({ id: k, label: providers[k].label })) });
       }
       if (m === 'POST' && p === '/auth/logout-everywhere') { q.bumpSession.run(user.id); return send(res, 200, { ok: true }, 'application/json', { 'Set-Cookie': clearCookie('sid') }); }
       if (m === 'DELETE' && p === '/api/me') { q.delUser.run(user.id); return send(res, 200, { ok: true }, 'application/json', { 'Set-Cookie': clearCookie('sid') }); }

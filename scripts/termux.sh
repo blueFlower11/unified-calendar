@@ -27,8 +27,8 @@ main() {
     trap 'termux-wake-unlock 2>/dev/null' EXIT
   fi
 
-  # Test login is safe here because the app only listens on this device.
-  export HOST=127.0.0.1 PORT="${PORT:-3000}" DEV_LOGIN=1
+  # Personal mode: no login, and the app only listens on this device.
+  export HOST=127.0.0.1 PORT="${PORT:-3000}" SINGLE_USER=1
   export DB_FILE="${DB_FILE:-$HOME/.unified-calendar/data.sqlite}"
   mkdir -p "$(dirname "$DB_FILE")"
 

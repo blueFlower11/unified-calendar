@@ -180,7 +180,29 @@ const jar = () => { let c = {}; return { set(h) { for (const x of [].concat(h ||
     const body = await x.json();
     assert.ok(body.error && /not allowed/i.test(body.error), `blocked ${bad}: ${JSON.stringify(body)}`);
   }
-  strict2.stop(); fake.close();
+  strict2.stop();
+
+  // 11. personal mode: no login, one owner, only answers on this device
+  assert.throws(() => create({ port: 0, host: '0.0.0.0', dbFile: path.join(tmp, 'd0.sqlite'), secretDir: tmp, providers: {}, env: { SINGLE_USER: '1' } }), /only runs on this device/);
+  const solo = create({ port: 0, host: '127.0.0.1', dbFile: path.join(tmp, 'd.sqlite'), secretDir: tmp, providers: {}, env: { SINGLE_USER: '1', ALLOW_PRIVATE_FEEDS: '1' } });
+  await solo.start();
+  const SB = solo.baseUrl(), H = { 'X-CSRF': '1', 'Content-Type': 'application/json' };
+  const meSolo = await (await fetch(SB + '/api/me')).json();
+  assert.strictEqual(meSolo.single, true, 'no cookie needed in personal mode');
+  assert.strictEqual((await (await fetch(SB + '/api/config')).json()).single, true);
+  const addSolo = await fetch(SB + '/api/calendars', { method: 'POST', headers: H, body: JSON.stringify({ name: 'College', group: 'college', url: `${F}/college.ics` }) });
+  assert.strictEqual(addSolo.status, 201);
+  const evSolo = await (await fetch(SB + EV)).json();
+  assert.ok(evSolo.some(e => e.title === 'College lecture'), 'calendar added in personal mode shows up');
+  assert.strictEqual((await fetch(SB + '/api/calendars', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 403, 'CSRF header still required');
+  assert.strictEqual((await fetch(SB + '/auth/google/start', { redirect: 'manual' })).status, 404, 'no sign-in routes in personal mode');
+  const evilStatus = await new Promise((resolve, reject) => {
+    const r = http.request(SB + '/api/me', { headers: { Host: 'evil.example' } }, res => { res.resume(); resolve(res.statusCode); });
+    r.on('error', reject); r.end();
+  });
+  assert.strictEqual(evilStatus, 403, 'requests addressed to another hostname are refused (DNS rebinding)');
+  solo.stop();
+  fake.close();
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('end-to-end tests passed');
   process.exit(0);
