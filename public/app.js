@@ -1,6 +1,6 @@
 'use strict';
 const $ = id => document.getElementById(id);
-const state = { view: 'month', cursor: startOfMonth(new Date()), cals: [], events: [], me: null, hidden: new Set(JSON.parse(localStorage.getItem('hidden') || '[]')) };
+const state = { view: window.matchMedia('(max-width: 760px)').matches ? 'agenda' : 'month', cursor: startOfMonth(new Date()), cals: [], events: [], me: null, hidden: new Set(JSON.parse(localStorage.getItem('hidden') || '[]')) };
 const GROUP_LABEL = { private: 'Private', college: 'College', work: 'Work' };
 const PROVIDER_ICON = { google: 'Google', microsoft: 'Microsoft', dev: 'Local test' };
 
