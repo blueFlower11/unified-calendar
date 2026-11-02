@@ -17,6 +17,9 @@ const MAX_ICS_PER_USER = 20;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png' };
 
+let VERSION = 'unknown';
+try { VERSION = require('child_process').execSync('git rev-parse --short HEAD', { cwd: __dirname, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() || VERSION; } catch {}
+
 function create(opts = {}) {
   const env = { ...process.env, ...(opts.env || {}) };
   const PORT = opts.port ?? (env.PORT || 3000);
@@ -229,7 +232,7 @@ function create(opts = {}) {
     }
 
     if (p.startsWith('/api/') || p.startsWith('/auth/')) {
-      if (m === 'GET' && p === '/api/config') return send(res, 200, { providers: configured().map(k => ({ id: k, label: providers[k].label })), devLogin: DEV_LOGIN, single: SINGLE });
+      if (m === 'GET' && p === '/api/config') return send(res, 200, { providers: configured().map(k => ({ id: k, label: providers[k].label })), devLogin: DEV_LOGIN, single: SINGLE, version: VERSION });
       // CSRF: state-changing requests must carry a custom header that cross-site pages cannot send
       if (m !== 'GET' && req.headers['x-csrf'] !== '1') return send(res, 403, { error: 'Forbidden' });
 
@@ -247,7 +250,7 @@ function create(opts = {}) {
       if (!user) return send(res, 401, { error: 'Please sign in' });
 
       if (m === 'GET' && p === '/api/me') {
-        return send(res, 200, { single: SINGLE, name: user.name, email: user.email, identities: q.identsOfUser.all(user.id).map(i => ({ id: i.id, provider: i.provider, email: i.email })), available: configured().map(k => ({ id: k, label: providers[k].label })) });
+        return send(res, 200, { single: SINGLE, version: VERSION, name: user.name, email: user.email, identities: q.identsOfUser.all(user.id).map(i => ({ id: i.id, provider: i.provider, email: i.email })), available: configured().map(k => ({ id: k, label: providers[k].label })) });
       }
       if (m === 'POST' && p === '/auth/logout-everywhere') { q.bumpSession.run(user.id); return send(res, 200, { ok: true }, 'application/json', { 'Set-Cookie': clearCookie('sid') }); }
       if (m === 'DELETE' && p === '/api/me') { q.delUser.run(user.id); return send(res, 200, { ok: true }, 'application/json', { 'Set-Cookie': clearCookie('sid') }); }
@@ -307,7 +310,7 @@ function create(opts = {}) {
     if (!full.startsWith(PUBLIC_DIR + path.sep)) return send(res, 403, 'Forbidden', 'text/plain');
     fs.readFile(full, (err, data) => {
       if (err) return send(res, 404, 'Not found', 'text/plain');
-      send(res, 200, data, MIME[path.extname(full)] || 'application/octet-stream', { 'Cache-Control': p === '/sw.js' ? 'no-cache' : 'public, max-age=300' });
+      send(res, 200, data, MIME[path.extname(full)] || 'application/octet-stream', { 'Cache-Control': 'no-cache' });
     });
   }
 

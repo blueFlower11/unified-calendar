@@ -47,7 +47,8 @@ $('devForm').addEventListener('submit', async ev => {
 async function boot() {
   try { state.me = await api('/api/me'); } catch { return; }
   $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
-  $('acctBtn').classList.toggle('hidden', !!state.me.single);   // personal mode: no account menu
+  $('acctBtn').classList.toggle('hidden', !!state.me.single);
+  if (state.me.version) $('ver').textContent = 'Version ' + state.me.version + (state.me.single ? ' · personal mode' : '');   // personal mode: no account menu
   renderAccount();
   await load();
 }
