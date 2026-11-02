@@ -13,6 +13,24 @@ No npm packages. Needs Node 22.5+ (uses the built-in SQLite).
 
 `DEV_LOGIN` is a shortcut login for testing only. Never turn it on for a server other people can reach.
 
+## Run it on your Android phone (Termux)
+
+The app runs on the phone itself, with no hosting and no accounts.
+
+1. Install **Termux from F-Droid** (f-droid.org). The Play Store version is outdated and will not work.
+2. Open Termux and paste this (first time only):
+
+       pkg install -y git && git clone https://github.com/blueFlower11/unified-calendar && bash unified-calendar/scripts/termux.sh
+
+3. When it says "Unified Calendar is starting", open **http://localhost:3000** in Chrome on the same phone.
+   Enter any email on the test login, then **+ Add calendar link** and paste an .ics link.
+4. Optional: in Chrome tap **⋮ → Install app** to get a home-screen icon.
+
+Later, to get the newest version, open Termux, press the up arrow to bring back the last command (or type
+`bash unified-calendar/scripts/termux.sh`) and run it. It downloads updates first, then starts.
+Stop the app with **Ctrl+C**. The app only runs while Termux is open, so keep it in the background (not swiped away).
+Your data is kept in `~/.unified-calendar/` and survives updates.
+
 ## Test it on your phone with GitHub Codespaces (free)
 
 1. Open this repo on github.com in your phone's browser (tip: use "Desktop site" if the buttons are hidden).
