@@ -17,6 +17,14 @@ No npm packages. Needs Node 22.5+ (uses the built-in SQLite).
   - **College:** *Subscribe / Export / iCal* in the timetable or learning platform
 - The links are stored encrypted on your device only, never in the code or on GitHub. Treat them like passwords.
 - Everything is read-only and refreshes every 15 minutes (`REFRESH_MINUTES`).
+- Prefer not to paste links in the app? Put them in `~/.unified-calendar/calendars.json` and they are added when the app starts:
+
+      [
+        { "name": "FER",    "group": "college", "url": "https://..." },
+        { "name": "Moodle", "group": "college", "url": "https://..." }
+      ]
+
+  Keep that file private (`chmod 600`). It is outside the code folder, so it never goes to GitHub.
 
 The multi-user sign-in (Google/Microsoft) described further down is optional and off in personal mode.
 

@@ -32,7 +32,9 @@ function create(opts = {}) {
   // Personal mode: one owner, no login screen. Only allowed on this device, so nobody else can reach it.
   const SINGLE = env.SINGLE_USER === '1';
   if (SINGLE && !['127.0.0.1', 'localhost', '::1'].includes(HOST)) throw new Error('SINGLE_USER mode has no login, so it only runs on this device (HOST must be 127.0.0.1).');
-  const db = open(opts.dbFile || env.DB_FILE || path.join(__dirname, 'data.sqlite'));
+  const DB_PATH = opts.dbFile || env.DB_FILE || path.join(__dirname, 'data.sqlite');
+  const CAL_CONFIG = env.CAL_CONFIG || path.join(path.dirname(DB_PATH), 'calendars.json');
+  const db = open(DB_PATH);
   const secret = sec.loadSecret(opts.secretDir || __dirname);
   const cx = sec.makeCrypto(secret);
   const providers = makeProviders(env, opts.providers);
@@ -65,6 +67,25 @@ function create(opts = {}) {
   const GROUPS = ['private', 'college', 'work'];
   const rid = () => crypto.randomBytes(5).toString('hex');
   const nextColor = uid => PALETTE[q.srcsOfUser.all(uid).length % PALETTE.length];
+
+  // Personal mode: calendars listed in calendars.json (next to the database) are added automatically at start.
+  // Format: [{ "name": "FER", "group": "college", "url": "https://..." }]. Adding the same link twice is ignored.
+  function seedFromFile() {
+    if (!SINGLE) return;
+    let list;
+    try { list = JSON.parse(fs.readFileSync(CAL_CONFIG, 'utf8')); }
+    catch (e) { if (e.code !== 'ENOENT') console.error('calendars.json could not be read: ' + e.message); return; }
+    if (!Array.isArray(list)) { console.error('calendars.json must be a list [ {...}, {...} ]'); return; }
+    const user = soleUser(); let added = 0;
+    for (const c of list) {
+      const url = c && typeof c.url === 'string' ? c.url.trim() : '';
+      if (!/^(https?|webcal):\/\//i.test(url)) { console.error(`calendars.json: skipped "${c && c.name}" (it needs a link starting with https://)`); continue; }
+      const id = crypto.createHash('sha256').update(url).digest('hex').slice(0, 10);
+      const color = /^#[0-9a-f]{6}$/i.test((c && c.color) || '') ? c.color : nextColor(user.id);
+      added += q.newSrc.run(id, user.id, 'ics', null, null, String(c.name || 'Calendar').slice(0, 60), GROUPS.includes(c.group) ? c.group : 'private', color, cx.encrypt(url)).changes;
+    }
+    if (added) console.log(`Added ${added} calendar(s) from calendars.json`);
+  }
 
   // ---------- provider access ----------
   async function formPost(url, params) {
@@ -320,6 +341,7 @@ function create(opts = {}) {
   let timer;
   server.start = () => new Promise(resolve => {
     server.listen(PORT, HOST, () => {
+      try { seedFromFile(); } catch (e) { console.error('calendars.json: ' + e.message); }
       syncAll().catch(() => {});
       timer = setInterval(() => syncAll().catch(() => {}), REFRESH_MS); timer.unref();
       resolve(server);

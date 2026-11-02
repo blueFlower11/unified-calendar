@@ -202,6 +202,21 @@ const jar = () => { let c = {}; return { set(h) { for (const x of [].concat(h ||
   });
   assert.strictEqual(evilStatus, 403, 'requests addressed to another hostname are refused (DNS rebinding)');
   solo.stop();
+
+  // 12. personal mode: calendars listed in calendars.json appear by themselves, once
+  const cfg = path.join(tmp, 'calendars.json');
+  fs.writeFileSync(cfg, JSON.stringify([{ name: 'FER', group: 'college', url: `${F}/fer.ics` }, { name: 'Moodle', group: 'college', url: `${F}/moodle.ics` }, { name: 'Broken', url: 'not-a-link' }]));
+  const mk = () => create({ port: 0, host: '127.0.0.1', dbFile: path.join(tmp, 'seed.sqlite'), secretDir: tmp, providers: {}, env: { SINGLE_USER: '1', ALLOW_PRIVATE_FEEDS: '1', CAL_CONFIG: cfg } });
+  let seeded = mk(); await seeded.start();
+  await new Promise(r => setTimeout(r, 400));
+  let seededList = await (await fetch(seeded.baseUrl() + '/api/calendars')).json();
+  assert.deepStrictEqual(seededList.map(c => c.name).sort(), ['FER', 'Moodle'], 'listed calendars added, invalid entry skipped');
+  assert.ok(seededList.every(c => c.group === 'college' && c.error === null && c.count >= 1), 'they sync right away');
+  seeded.stop();
+  seeded = mk(); await seeded.start();
+  seededList = await (await fetch(seeded.baseUrl() + '/api/calendars')).json();
+  assert.strictEqual(seededList.length, 2, 'restarting does not duplicate them');
+  seeded.stop();
   fake.close();
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('end-to-end tests passed');
