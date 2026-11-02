@@ -1,0 +1,15 @@
+{
+  "name": "Unified Calendar",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "Unified Calendar", "onAutoForward": "openBrowser", "visibility": "private" }
+  },
+  "containerEnv": {
+    "HOST": "0.0.0.0",
+    "PORT": "3000",
+    "DEV_LOGIN": "1",
+    "DB_FILE": "/home/node/uc-data.sqlite"
+  },
+  "postStartCommand": "bash .devcontainer/start.sh"
+}

@@ -13,6 +13,17 @@ No npm packages. Needs Node 22.5+ (uses the built-in SQLite).
 
 `DEV_LOGIN` is a shortcut login for testing only. Never turn it on for a server other people can reach.
 
+## Test it on your phone with GitHub Codespaces (free)
+
+1. Open this repo on github.com in your phone's browser (tip: use "Desktop site" if the buttons are hidden).
+2. Tap **Code → Codespaces → Create codespace on main**. The first start takes 1-2 minutes.
+3. The app starts by itself. Open the **Ports** tab and tap the link next to port **3000**
+   (it is private: only you, signed in to GitHub, can open it).
+4. Enter any email on the test login, then **+ Add calendar link** and paste an .ics link.
+
+The Codespace stops after about 30 minutes of inactivity and your free monthly hours apply.
+Your test data stays in the Codespace until you delete it.
+
 ## Put it online (needed for the Android app and for real Google/Microsoft sign-in)
 
 You need a host with HTTPS and a domain (any small VPS, Fly.io, Railway, Render... the `Dockerfile` works for all of them;
